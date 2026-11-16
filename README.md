@@ -2,7 +2,7 @@
 
 ![Screenshot of the dashboard: period selector, monthly timeline, key figures, map of the 542 planning areas and the top 20 ranking](docs/screenshot.png)
 
-**Live: <https://kevin.melchert.xyz/stolen-bikes/>**
+**Live: <https://kevin.melchert.xyz/stolen-bikes-berlin/>**
 
 Interactive dashboard for the Berlin police open data set *Fahrraddiebstahl* (bike thefts):
 a map of the 542 LOR planning areas (cases, cases per km², cases per 1,000 residents), a top-20
