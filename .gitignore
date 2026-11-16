@@ -1,0 +1,5 @@
+.DS_Store
+# local backup written by `python3 build.py --fetch`
+Fahrraddiebstahl.prev.csv
+# local preview-server config
+.claude/

@@ -1,0 +1,667 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Gestohlene Fahrräder Berlin</title>
+<style>
+:root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface: #fcfcfb;
+  --ink: #0b0b0b; --ink-2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,.10);
+  --series-1: #2a78d6; --series-strong: #184f95; --band: rgba(42,120,214,.10);
+  --zero: #ecebe6; --na: #d9d8d2; --map-stroke: #fcfcfb;
+  --seq-1:#cde2fb; --seq-2:#9ec5f4; --seq-3:#6da7ec; --seq-4:#3987e5; --seq-5:#256abf; --seq-6:#184f95; --seq-7:#0d366b;
+  --ghost: rgba(11,11,11,.05);
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19;
+    --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,.10);
+    --series-1: #3987e5; --series-strong: #86b6ef; --band: rgba(57,135,229,.14);
+    --zero: #262624; --na: #3a3a37; --map-stroke: #1a1a19;
+    --seq-1:#0d366b; --seq-2:#184f95; --seq-3:#256abf; --seq-4:#3987e5; --seq-5:#6da7ec; --seq-6:#9ec5f4; --seq-7:#cde2fb;
+    --ghost: rgba(255,255,255,.06);
+  }
+}
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19;
+  --ink: #f0efec; --ink-2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,.10);
+  --series-1: #3987e5; --series-strong: #86b6ef; --band: rgba(57,135,229,.14);
+  --zero: #262624; --na: #3a3a37; --map-stroke: #1a1a19;
+  --seq-1:#0d366b; --seq-2:#184f95; --seq-3:#256abf; --seq-4:#3987e5; --seq-5:#6da7ec; --seq-6:#9ec5f4; --seq-7:#cde2fb;
+  --ghost: rgba(255,255,255,.06);
+}
+* { box-sizing: border-box; }
+body { margin:0; background:var(--page); color:var(--ink); font:14px/1.45 system-ui,-apple-system,"Segoe UI",sans-serif; }
+.wrap { max-width:1200px; margin:0 auto; padding:24px 16px 48px; }
+.hdr { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
+h1 { font-size:26px; line-height:1.2; margin:0 0 4px; font-weight:650; letter-spacing:-.01em; }
+.sub { color:var(--ink-2); margin:0 0 18px; max-width:70ch; }
+.filters { display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; margin-bottom:16px; }
+.fg { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.seg { display:inline-flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; background:var(--surface); }
+.seg button { all:unset; cursor:pointer; padding:6px 12px; color:var(--ink-2); font-size:13px; white-space:nowrap; }
+.seg button + button { border-left:1px solid var(--border); }
+.seg button:hover { background:var(--ghost); }
+.seg button[aria-pressed="true"] { background:var(--ink); color:var(--surface); font-weight:600; }
+.seg button:focus-visible, select:focus-visible, input:focus-visible, .hrow:focus-visible, .chip:focus-visible, .tbtn:focus-visible { outline:2px solid var(--series-1); outline-offset:2px; }
+select, input[type="date"] { background:var(--surface); color:var(--ink); border:1px solid var(--border); border-radius:8px; padding:5px 8px; font:inherit; font-size:13px; max-width:220px; }
+.lbl-f { color:var(--muted); font-size:12px; }
+.chip { all:unset; cursor:pointer; display:inline-flex; gap:8px; align-items:center; background:var(--ink); color:var(--surface); border-radius:999px; padding:4px 12px; font-size:13px; }
+.chip[hidden] { display:none; }
+.kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:12px; }
+.card { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:16px; min-width:0; }
+.kpi .v { font-size:30px; font-weight:650; line-height:1.15; letter-spacing:-.01em; }
+.kpi .l { color:var(--ink-2); font-size:13px; }
+.kpi .n { color:var(--muted); font-size:12px; margin-top:2px; }
+/* one shared 3-column grid: map = 2 columns, ranking = 1; the cards below use the same columns */
+.grid2, .grid3 { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin-bottom:12px; }
+.grid2 > :first-child { grid-column:span 2; }
+@media (max-width:1080px){
+  .grid2 { grid-template-columns:minmax(0,1fr); }
+  .grid2 > :first-child { grid-column:auto; }
+  .grid3 { grid-template-columns:repeat(auto-fit,minmax(320px,1fr)); }
+}
+.ch { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; margin-bottom:10px; flex-wrap:wrap; }
+.ch > div:first-child { flex:1 1 200px; min-width:0; }
+.ch h2 { font-size:15px; margin:0; font-weight:600; }
+.ch p { margin:2px 0 0; color:var(--muted); font-size:12px; }
+.tbtn { all:unset; cursor:pointer; font-size:12px; color:var(--ink-2); border:1px solid var(--border); border-radius:6px; padding:2px 8px; white-space:nowrap; }
+.tbtn:hover { background:var(--ghost); }
+.tbtn[aria-pressed="true"] { background:var(--ghost); color:var(--ink); }
+.mapcard { display:flex; flex-direction:column; }
+#map { width:100%; height:auto; display:block; flex:1 1 auto; min-height:0; } /* spare height is shared above/below the map */
+#map path { stroke:var(--map-stroke); stroke-width:.6; vector-effect:non-scaling-stroke; cursor:pointer; }
+#map path:hover { stroke:var(--ink); stroke-width:1.5; }
+#map path.sel { stroke:var(--ink); stroke-width:2.2; }
+#map text { font-size:15px; fill:var(--ink); paint-order:stroke; stroke:var(--surface); stroke-width:3px; stroke-linejoin:round; font-weight:600; pointer-events:none; opacity:.85; }
+.c0{fill:var(--zero)} .cna{fill:var(--na)} .c1{fill:var(--seq-1)} .c2{fill:var(--seq-2)} .c3{fill:var(--seq-3)} .c4{fill:var(--seq-4)} .c5{fill:var(--seq-5)} .c6{fill:var(--seq-6)} .c7{fill:var(--seq-7)}
+.legend { display:flex; flex-wrap:wrap; align-items:flex-end; gap:2px; margin-top:8px; font-size:11px; color:var(--ink-2); }
+.legend .sw { display:flex; flex-direction:column; gap:3px; align-items:flex-start; min-width:44px; }
+.legend .sw i { display:block; width:100%; height:10px; border-radius:2px; border:1px solid var(--border); }
+.legend .u { margin-left:10px; color:var(--muted); align-self:center; }
+.hrow { display:grid; grid-template-columns:minmax(100px,48%) 1fr auto; gap:8px; align-items:center; padding:3px 4px; border-radius:6px; cursor:default; font-size:13px; }
+.hrow[role="button"] { cursor:pointer; }
+.hrow:hover { background:var(--ghost); }
+.hrow .nm { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--ink); }
+.hrow .nm small { color:var(--muted); margin-left:4px; }
+.hrow.two { grid-template-columns:minmax(150px,52%) 1fr auto; padding:2px 4px; }
+.hrow.two .nm { white-space:normal; line-height:1.2; }
+.hrow.two .nm small { display:block; margin:0 0 0 1.9em; font-size:11px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.hrow.two .nm .rk { float:left; margin-top:1px; }
+.hrow.two .nm .tx { display:block; margin-left:1.9em; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.hrow.active .nm { font-weight:650; }
+.hrow .track { height:12px; display:block; }
+.hrow .bar { display:block; height:100%; background:var(--series-1); border-radius:0 4px 4px 0; min-width:2px; }
+.hrow.active .bar { background:var(--series-strong); }
+.hrow .val { font-variant-numeric:tabular-nums; color:var(--ink); text-align:right; min-width:3.2em; }
+.rk { color:var(--muted); font-variant-numeric:tabular-nums; margin-right:6px; display:inline-block; min-width:1.4em; text-align:right; }
+svg text { font-family:inherit; }
+.ax { fill:var(--muted); font-size:11px; }
+table.t { border-collapse:collapse; width:100%; font-size:13px; font-variant-numeric:tabular-nums; }
+table.t th, table.t td { text-align:left; padding:4px 8px; border-bottom:1px solid var(--grid); }
+table.t td:last-child, table.t th:last-child { text-align:right; }
+.tblwrap { max-height:260px; overflow:auto; }
+#tip { position:fixed; z-index:10; pointer-events:none; background:var(--surface); color:var(--ink); border:1px solid var(--border); border-radius:8px; padding:8px 10px; box-shadow:0 4px 16px rgba(0,0,0,.18); font-size:12px; max-width:260px; display:none; }
+#tip b { display:block; font-size:13px; margin-bottom:2px; }
+#tip .r { display:flex; justify-content:space-between; gap:14px; }
+#tip .r span:first-child { color:var(--ink-2); }
+#tip .r span:last-child { font-weight:650; font-variant-numeric:tabular-nums; }
+.notes { color:var(--muted); font-size:12px; max-width:90ch; margin-top:20px; }
+.notes li { margin-bottom:4px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="hdr">
+    <h1 data-i18n="title">Gestohlene Fahrräder in Berlin</h1>
+    <span class="seg" id="seg-lang" role="group" data-i18n-aria="langAria" aria-label="Sprache">
+      <button data-lang="de" aria-label="Deutsch">DE</button><button data-lang="en" aria-label="English">EN</button>
+    </span>
+  </div>
+  <p class="sub" id="sub"></p>
+
+  <div class="filters" id="filters">
+    <div class="fg"><span class="lbl-f" data-i18n="period">Period</span><span class="seg" id="seg-period" role="group"></span></div>
+    <div class="fg"><label class="lbl-f" for="sel-month" data-i18n="month">Month</label><select id="sel-month"></select></div>
+    <div class="fg">
+      <label class="lbl-f" for="d-from" data-i18n="from">From</label><input type="date" id="d-from">
+      <label class="lbl-f" for="d-to" data-i18n="to">To</label><input type="date" id="d-to">
+    </div>
+    <div class="fg"><label class="lbl-f" for="sel-delikt" data-i18n="offense">Offense</label><select id="sel-delikt"></select></div>
+    <div class="fg"><label class="lbl-f" for="sel-type" data-i18n="biketype">Bike type</label><select id="sel-type"></select></div>
+    <button class="chip" id="chip" hidden></button>
+  </div>
+
+  <section class="card" style="margin-bottom:12px" aria-labelledby="tl-h" data-card="tl">
+    <div class="ch"><div><h2 id="tl-h" data-i18n="tlTitle"></h2><p id="tl-sub"></p></div><button class="tbtn" aria-pressed="false"></button></div>
+    <div class="chart" id="tl" style="position:relative"></div>
+    <div class="tblwrap" hidden></div>
+  </section>
+
+  <div class="kpis" id="kpis"></div>
+
+  <div class="grid2">
+    <section class="card mapcard" aria-labelledby="map-h">
+      <div class="ch">
+        <div><h2 id="map-h"></h2><p id="map-sub"></p></div>
+        <span class="seg" id="seg-metric" role="group" data-i18n-aria="metricAria"></span>
+      </div>
+      <svg id="map" role="img"></svg>
+      <div class="legend" id="legend"></div>
+    </section>
+    <section class="card" aria-labelledby="top-h">
+      <div class="ch"><div><h2 id="top-h"></h2><p id="top-sub"></p></div></div>
+      <div id="top"></div>
+    </section>
+  </div>
+
+  <div class="grid3">
+    <section class="card" aria-labelledby="hr-h" data-card="hr">
+      <div class="ch"><div><h2 id="hr-h" data-i18n="hrTitle"></h2><p id="hr-sub"></p></div><button class="tbtn" aria-pressed="false"></button></div>
+      <div class="chart" id="hr"></div><div class="tblwrap" hidden></div>
+    </section>
+    <section class="card" aria-labelledby="ty-h" data-card="ty">
+      <div class="ch"><div><h2 id="ty-h" data-i18n="tyTitle"></h2><p id="ty-sub" data-i18n="tySub"></p></div><button class="tbtn" aria-pressed="false"></button></div>
+      <div class="chart" id="ty"></div><div class="tblwrap" hidden></div>
+    </section>
+    <section class="card" aria-labelledby="di-h" data-card="di">
+      <div class="ch"><div><h2 id="di-h" data-i18n="diTitle"></h2><p id="di-sub"></p></div><button class="tbtn" aria-pressed="false"></button></div>
+      <div class="chart" id="di"></div><div class="tblwrap" hidden></div>
+    </section>
+  </div>
+
+  <ul class="notes" id="notes"></ul>
+</div>
+<div id="tip" role="tooltip"></div>
+
+<script>
+const DATA = /*__DATA__*/null;
+const {meta, areas, cases} = DATA;
+const N = cases.p.length, NM = meta.monthStarts.length - 1;
+const DAYMS = 864e5, D0 = Date.parse(meta.day0 + "T00:00:00Z");
+
+/* ================= i18n ================= */
+const I18N = {
+  de: {
+    docTitle:"Gestohlene Fahrräder Berlin", title:"Gestohlene Fahrräder in Berlin", langAria:"Sprache",
+    sub:(a,b,n,u)=>`Polizeilich erfasste Fahrraddiebstähle sowie Keller- und Bodeneinbrüche mit Fahrrädern, ${a} – ${b} (${n} Fälle nach Beginn des Tatzeitraums; Stand ${u}). Planungsraum auf der Karte anklicken für Details.`,
+    period:"Zeitraum", month:"Monat", monthPh:"Monat wählen", from:"Von", to:"Bis", offense:"Delikt", biketype:"Fahrradart", all:"Alle",
+    last90:"Letzte 90 Tage", last30:"Letzte 30 Tage", clearSel:"Auswahl des Planungsraums aufheben",
+    kCases:"Gemeldete Fälle", kPerDay:n=>`${n} pro Tag`, kValue:"Wert des Diebesguts", kValueSub:"Summe der gemeldeten Werte",
+    kMedian:"Medianwert je Fall", kMedianSub:"Fälle mit Wert > 0 €", kAtt:"Versuche", kAttSub:n=>`${n} versucht, nicht vollendet`,
+    mapTitle:"Wo Fahrräder gestohlen werden", mapTitleSel:n=>`Wo Fahrräder gestohlen werden · ${n} markiert`,
+    mapSub:(n,a,b)=>`${n} Fälle · ${a} – ${b} · 542 Planungsräume (LOR 2021)`, metricAria:"Kennzahl der Karte",
+    mCount:"Fälle", mDensity:"Pro km²", mRate:"Je 1.000 Einwohner",
+    unitCount:"Fälle je Planungsraum", unitDensity:"Fälle pro km²", unitRate:"Fälle je 1.000 Einwohner", naNote:" · k. A. = weniger als 1.000 Einwohner", na:"k. A.",
+    arMap:"Karte der Berliner Planungsräume, eingefärbt nach der gewählten Kennzahl zu gemeldeten Fahrraddiebstählen",
+    topTitle:n=>`Top ${n} Planungsräume`, subCount:"Anzahl Fälle", subDensity:"Fälle pro km²", subRate:"Fälle je 1.000 Einwohner",
+    topDensity:"Fälle pro km², Räume mit ≥ 10 Fällen", topRate:"Fälle je 1.000 Einwohner, Räume mit ≥ 10 Fällen und ≥ 1.000 Einwohnern", topHint:" · zum Auswählen anklicken",
+    tDistrict:"Bezirk", tCases:"Fälle", tPerKm2:"Pro km²", tResidents:"Einwohner", tPerK:"Je 1.000 Einw.", tNaLong:"k. A. (< 1.000 Einw.)", tShare:"Anteil", tRecorded:"Erfasst als",
+    tlTitle:"Fälle pro Monat", tlBase:"Nach Beginn des Tatzeitraums", tlShade:" · schattiert = gewählter Zeitraum", tlHint:" · Monat anklicken zum Auswählen",
+    partial:"Teilmonat", tipTo:d=>` (bis ${d})`, arTl:"Liniendiagramm der gemeldeten Fahrraddiebstähle pro Monat",
+    hrTitle:"Tageszeit", hrSub:p=>`Beginn des Tatzeitraums (Stunde) · nur Zeiträume ≤ 3 Std. (${p} % der Fälle)`, arHr:"Balkendiagramm der Diebstähle nach Tageszeit",
+    tyTitle:"Fahrradart", tySub:"Wie von der Polizei erfasst", diTitle:"Bezirke", tbl:"Tabelle", chart:"Diagramm",
+    hMonth:"Monat", hHour:"Stunde", hType:"Fahrradart", hRec:"Erfasst als", hDistrict:"Bezirk", hPerK:"Je 1.000 Einwohner",
+    notes:[
+      "Quelle: Polizei Berlin / LKA Berlin, Open Data „Fahrraddiebstahl“ (tagesaktuell; enthält das laufende Jahr bis gestern und das gesamte Vorjahr). Raumeinheiten: LOR-Planungsräume, Stand 01.01.2021, Grenzen aus dem FIS-Broker-WFS (Senatsverwaltung für Stadtentwicklung); Namen aus dem LOR-Schlüsselverzeichnis. Einwohner: Amt für Statistik Berlin-Brandenburg, Einwohnerregisterstatistik, 31.12.2024.",
+      "Die Zahlen zeigen, wo Fälle angezeigt werden, nicht wie riskant ein Gebiet ist: Zentrale, dicht besiedelte Gebiete haben deutlich mehr Fahrräder (und Menschen) als der Stadtrand. Werte pro km² sind keine Raten je Fahrrad, und sehr kleine Räume können extrem wirken.",
+      "„Je 1.000 Einwohner“ teilt die Fälle des gewählten Zeitraums durch die gemeldeten Einwohner (31.12.2024), nicht durch die tatsächlich anwesenden Personen oder abgestellten Fahrräder. Pendler-, Bahnhofs- und Touristengebiete mit wenigen Einwohnern (z. B. rund um Unter den Linden oder die Hauptbahnhöfe) zeigen daher sehr hohe Werte. Räume mit weniger als 1.000 Einwohnern werden als „k. A.“ dargestellt.",
+      "Nur polizeilich erfasste Taten; nicht angezeigte Diebstähle fehlen. Taten mit einem Tatzeitraum von mehr als 72 Stunden veröffentlicht die Polizei nicht. „Wert“ ist der gemeldete Wert des gesamten Diebesguts; bei Kellereinbrüchen kann er auch andere Gegenstände enthalten.",
+      "Die Fahrradarten sind die Kategorien der Polizei („Fahrrad“ = ohne nähere Angabe). Der jüngste Monat ist meist unvollständig."
+    ]
+  },
+  en: {
+    docTitle:"Stolen Bikes Berlin", title:"Stolen bikes in Berlin", langAria:"Language",
+    sub:(a,b,n,u)=>`Police-reported bicycle thefts and cellar/storage burglaries involving bikes, ${a} – ${b} (${n} cases by start of offence window; data as of ${u}). Click a planning area on the map to drill into it.`,
+    period:"Period", month:"Month", monthPh:"Pick a month", from:"From", to:"To", offense:"Offense", biketype:"Bike type", all:"All",
+    last90:"Last 90 days", last30:"Last 30 days", clearSel:"Clear planning area selection",
+    kCases:"Reported cases", kPerDay:n=>`${n} per day`, kValue:"Value of stolen goods", kValueSub:"sum of reported values",
+    kMedian:"Median value per case", kMedianSub:"cases with a value > €0", kAtt:"Attempts", kAttSub:n=>`${n} attempted, not completed`,
+    mapTitle:"Where bikes get stolen", mapTitleSel:n=>`Where bikes get stolen · ${n} highlighted`,
+    mapSub:(n,a,b)=>`${n} cases · ${a} – ${b} · 542 planning areas (LOR 2021)`, metricAria:"Map metric",
+    mCount:"Cases", mDensity:"Per km²", mRate:"Per 1,000 residents",
+    unitCount:"cases per planning area", unitDensity:"cases per km²", unitRate:"cases per 1,000 residents", naNote:" · n/a = fewer than 1,000 residents", na:"n/a",
+    arMap:"Map of Berlin planning areas shaded by the selected measure of reported bike thefts",
+    topTitle:n=>`Top ${n} planning areas`, subCount:"Number of cases", subDensity:"Cases per km²", subRate:"Cases per 1,000 residents",
+    topDensity:"Cases per km², areas with ≥ 10 cases", topRate:"Cases per 1,000 residents, areas with ≥ 10 cases and ≥ 1,000 residents", topHint:" · click to drill down",
+    tDistrict:"District", tCases:"Cases", tPerKm2:"Per km²", tResidents:"Residents", tPerK:"Per 1,000 res.", tNaLong:"n/a (< 1,000 res.)", tShare:"Share", tRecorded:"Recorded as",
+    tlTitle:"Cases per month", tlBase:"By start of the offence window", tlShade:" · shaded = selected period", tlHint:" · click a month to select it",
+    partial:"partial month", tipTo:d=>` (to ${d})`, arTl:"Line chart of reported bike thefts per month",
+    hrTitle:"Time of day", hrSub:p=>`Hour the offence window began · only windows ≤ 3 h (${p}% of cases)`, arHr:"Bar chart of thefts by hour of day",
+    tyTitle:"Bike type", tySub:"As recorded by the police", diTitle:"Districts", tbl:"Table", chart:"Chart",
+    hMonth:"Month", hHour:"Hour", hType:"Bike type", hRec:"Recorded as", hDistrict:"District", hPerK:"Per 1,000 residents",
+    notes:[
+      "Source: Polizei Berlin / LKA Berlin, open data “Fahrraddiebstahl” (updated daily; covers the current year up to yesterday plus the whole previous year). Geographic units: LOR planning areas (Planungsräume), version 01.01.2021, boundaries from FIS-Broker WFS (Senatsverwaltung für Stadtentwicklung); names from the LOR key list. Residents: Amt für Statistik Berlin-Brandenburg, Einwohnerregisterstatistik, 31.12.2024.",
+      "Counts show where cases are reported, not how risky an area is: central, dense areas have many more bikes (and people) than the outskirts. Per-km² values are not per-bike rates, and very small areas can look extreme.",
+      "“Per 1,000 residents” divides the cases of the selected period by registered residents (31.12.2024), not by the people actually present or the bikes parked there. Commuter, station and tourist areas with few residents (e.g. around Unter den Linden or the main stations) therefore show very high rates. Areas with fewer than 1,000 residents are shown as n/a.",
+      "Only recorded offences appear; unreported thefts are not in the data. Offences whose time window exceeds 72 h are not published by the police. “Value” is the reported value of everything taken; for cellar burglaries it can include non-bike items.",
+      "Bike types are the police’s own categories (“Bike (unspecified)” = Fahrrad). The most recent month is usually partial."
+    ]
+  }
+};
+const EN_TYPE = {"Herrenfahrrad":"Men's bike","Damenfahrrad":"Women's bike","Fahrrad":"Bike (unspecified)","Mountainbike":"Mountain bike","Rennrad":"Road bike","Citybike":"City bike","Trekkingrad":"Trekking bike","Kinderfahrrad":"Kids' bike","diverse Fahrräder":"Several bikes","Lastenfahrrad":"Cargo bike","Hollandrad":"Dutch bike","Klapprad":"Folding bike","BMX":"BMX","Liegerad":"Recumbent"};
+const DE_TYPE = {"Fahrrad":"Fahrrad (ohne nähere Angabe)","diverse Fahrräder":"Mehrere Fahrräder"};
+const EN_DELIKT = {"Fahrraddiebstahl":"Bike theft","Keller- und Bodeneinbruch":"Cellar / storage burglary"};
+
+let lang = "de"; // German is the default; a language chosen via the switch is remembered
+try { const s = localStorage.getItem("sbLang"); if (s && I18N[s]) lang = s; } catch (e) {}
+const t = (k, ...a) => { const v = I18N[lang][k] ?? I18N.de[k] ?? k; return typeof v === "function" ? v(...a) : v; };
+
+let nf, nf1, eurF, dateF, monF, monLongF;
+function setLocale() {
+  const loc = lang === "de" ? "de-DE" : "en-GB";
+  nf = new Intl.NumberFormat(loc); nf1 = new Intl.NumberFormat(loc, {maximumFractionDigits:1});
+  eurF = new Intl.NumberFormat(loc, {style:"currency", currency:"EUR", maximumFractionDigits:0});
+  dateF = new Intl.DateTimeFormat(loc, {day:"numeric", month:"short", year:"numeric", timeZone:"UTC"});
+  monF = new Intl.DateTimeFormat(loc, {month:"short", year:"2-digit", timeZone:"UTC"});
+  monLongF = new Intl.DateTimeFormat(loc, {month:"long", year:"numeric", timeZone:"UTC"});
+}
+setLocale();
+const eur = n => eurF.format(Math.round(n));
+const eurBig = n => lang === "de" ? nf1.format(n / 1e6) + " Mio. €" : "€" + nf1.format(n / 1e6) + " M";
+const dayMs = d => D0 + d * DAYMS;
+const fmtDay = d => dateF.format(dayMs(d));
+const isoDay = d => new Date(dayMs(d)).toISOString().slice(0, 10);
+const dayFromIso = s => Math.round((Date.parse(s + "T00:00:00Z") - D0) / DAYMS);
+const monthLabel = m => monF.format(dayMs(meta.monthStarts[m]));
+const typeLabel = i => (lang === "de" ? DE_TYPE[meta.types[i]] : EN_TYPE[meta.types[i]]) || meta.types[i];
+const deliktLabel = i => (lang === "en" && EN_DELIKT[meta.delikte[i]]) || meta.delikte[i];
+const bezName = Object.fromEntries(meta.bezirke.map(b => [b.id, b.name]));
+
+/* ================= state ================= */
+const FULL = [meta.minDay, meta.maxDay];
+const state = {range:[...FULL], delikt:-1, type:-1, metric:"count", sel:-1};
+const periodRange = () => state.range;
+const isFull = () => state.range[0] === FULL[0] && state.range[1] === FULL[1];
+const monthRange = m => [Math.max(meta.minDay, meta.monthStarts[m]), Math.min(meta.maxDay, meta.monthStarts[m + 1] - 1)];
+function monthOfRange() { for (let m = 0; m < NM; m++) { const r = monthRange(m); if (r[0] === state.range[0] && r[1] === state.range[1]) return m; } return -1; }
+function presets() {
+  const mx = meta.maxDay, mn = meta.minDay, list = [{id:"all", label:t("all"), r:[mn, mx]}];
+  if (meta.years.length > 1) meta.years.forEach(([y, a, b]) => list.push({id:"y" + y, label:String(y), r:[a, b]}));
+  list.push({id:"d90", label:t("last90"), r:[Math.max(mn, mx - 89), mx]}, {id:"d30", label:t("last30"), r:[Math.max(mn, mx - 29), mx]});
+  return list;
+}
+function setRange(a, b) {
+  a = Math.max(meta.minDay, Math.min(meta.maxDay, a)); b = Math.max(meta.minDay, Math.min(meta.maxDay, b));
+  if (a > b) [a, b] = [b, a];
+  state.range = [a, b]; renderAll();
+}
+function mask({period=true, sel=true} = {}) {
+  const [a, b] = state.range, m = new Uint8Array(N);
+  for (let i = 0; i < N; i++) {
+    if (period && (cases.d[i] < a || cases.d[i] > b)) continue;
+    if (state.delikt >= 0 && cases.k[i] !== state.delikt) continue;
+    if (state.type >= 0 && cases.t[i] !== state.type) continue;
+    if (sel && state.sel >= 0 && cases.p[i] !== state.sel) continue;
+    m[i] = 1;
+  }
+  return m;
+}
+
+/* ================= helpers ================= */
+const tip = document.getElementById("tip");
+function showTip(e, title, rows) {
+  tip.replaceChildren();
+  const b = document.createElement("b"); b.textContent = title; tip.append(b);
+  for (const [k, v] of rows) {
+    const r = document.createElement("div"); r.className = "r";
+    const s1 = document.createElement("span"), s2 = document.createElement("span");
+    s1.textContent = k; s2.textContent = v; r.append(s1, s2); tip.append(r);
+  }
+  tip.style.display = "block";
+  const w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = e.clientX + 14, y = e.clientY + 14;
+  if (x + w > innerWidth - 8) x = e.clientX - w - 14;
+  if (y + h > innerHeight - 8) y = e.clientY - h - 14;
+  tip.style.left = Math.max(8, x) + "px"; tip.style.top = Math.max(8, y) + "px";
+}
+const hideTip = () => { tip.style.display = "none"; };
+const SVGNS = "http://www.w3.org/2000/svg";
+function el(tag, attrs = {}, parent) {
+  const n = document.createElementNS(SVGNS, tag);
+  for (const k in attrs) n.setAttribute(k, attrs[k]);
+  if (parent) parent.append(n);
+  return n;
+}
+function niceMax(v, ticks = 4) {
+  if (v <= 0) return {max:1, step:1/ticks};
+  const raw = v / ticks, p = Math.pow(10, Math.floor(Math.log10(raw)));
+  const f = raw / p, step = (f <= 1 ? 1 : f <= 2 ? 2 : f <= 2.5 ? 2.5 : f <= 5 ? 5 : 10) * p;
+  return {max: Math.ceil(v / step) * step, step};
+}
+const topRound = (x, y, w, h, r) => { r = Math.min(r, w / 2, h); return `M${x} ${y+h}V${y+r}Q${x} ${y} ${x+r} ${y}H${x+w-r}Q${x+w} ${y} ${x+w} ${y+r}V${y+h}Z`; };
+
+/* table view */
+function setTable(id, head, rows) {
+  const wrap = document.querySelector(`[data-card="${id}"] .tblwrap`);
+  const tb = document.createElement("table"); tb.className = "t";
+  const tr = document.createElement("tr");
+  for (const h of head) { const th = document.createElement("th"); th.textContent = h; tr.append(th); }
+  const thead = document.createElement("thead"); thead.append(tr); tb.append(thead);
+  const body = document.createElement("tbody");
+  for (const r of rows) { const row = document.createElement("tr"); for (const c of r) { const td = document.createElement("td"); td.textContent = c; row.append(td); } body.append(row); }
+  tb.append(body); wrap.replaceChildren(tb);
+}
+document.querySelectorAll("[data-card] .tbtn").forEach(btn => btn.addEventListener("click", () => {
+  const card = btn.closest("[data-card]"), on = btn.getAttribute("aria-pressed") !== "true";
+  btn.setAttribute("aria-pressed", on); btn.textContent = on ? t("chart") : t("tbl");
+  card.querySelector(".chart").hidden = on; card.querySelector(".tblwrap").hidden = !on;
+  if (!on) renderAll();
+}));
+
+/* horizontal bars (HTML) */
+function hbars(container, items, max, opts = {}) {
+  container.replaceChildren();
+  items.forEach((it, i) => {
+    const row = document.createElement("div"); row.className = "hrow" + (it.active ? " active" : "") + (opts.rank ? " two" : "");
+    const nm = document.createElement("span"); nm.className = "nm"; nm.title = it.label;
+    if (opts.rank) { const rk = document.createElement("span"); rk.className = "rk"; rk.textContent = i + 1; nm.append(rk); }
+    const tx = document.createElement("span"); tx.className = "tx"; tx.textContent = it.label; nm.append(tx);
+    if (it.sub) { const s = document.createElement("small"); s.textContent = it.sub; nm.append(s); }
+    const tr = document.createElement("span"); tr.className = "track";
+    const bar = document.createElement("span"); bar.className = "bar"; bar.style.width = (max > 0 ? Math.max(0, it.value / max * 100) : 0) + "%"; tr.append(bar);
+    const v = document.createElement("span"); v.className = "val"; v.textContent = it.text;
+    row.append(nm, tr, v);
+    row.addEventListener("pointermove", e => showTip(e, it.label, it.tip));
+    row.addEventListener("pointerleave", hideTip);
+    if (it.onclick) {
+      row.setAttribute("role", "button"); row.tabIndex = 0;
+      row.addEventListener("click", it.onclick);
+      row.addEventListener("keydown", e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); it.onclick(); } });
+    }
+    container.append(row);
+  });
+}
+
+/* ================= map ================= */
+const map = document.getElementById("map");
+map.setAttribute("viewBox", `0 0 ${meta.svgW} ${meta.svgH}`);
+const gAreas = el("g", {}, map), gLabels = el("g", {}, map);
+const paths = areas.map((a, i) => {
+  const p = el("path", {d:a.d, "fill-rule":"evenodd", class:"c0"}, gAreas);
+  p.addEventListener("pointermove", e => hoverArea(e, i));
+  p.addEventListener("pointerleave", hideTip);
+  p.addEventListener("click", () => selectArea(i));
+  return p;
+});
+(function labels() { // district labels at the area-weighted bbox centre of their planning areas
+  const acc = {};
+  paths.forEach((p, i) => {
+    const bb = p.getBBox(), a = areas[i], w = a.km2;
+    const o = acc[a.bez] || (acc[a.bez] = {x:0, y:0, w:0});
+    o.x += (bb.x + bb.width / 2) * w; o.y += (bb.y + bb.height / 2) * w; o.w += w;
+  });
+  for (const id in acc) {
+    const tx = el("text", {x:acc[id].x / acc[id].w, y:acc[id].y / acc[id].w, "text-anchor":"middle"}, gLabels);
+    tx.textContent = bezName[id].replace("Charlottenburg-Wilmersdorf","Charlottenburg-W.").replace("Friedrichshain-Kreuzberg","Friedrichshain-Kr.").replace("Treptow-Köpenick","Treptow-K.").replace("Marzahn-Hellersdorf","Marzahn-H.").replace("Tempelhof-Schöneberg","Tempelhof-Sch.").replace("Steglitz-Zehlendorf","Steglitz-Z.");
+  }
+})();
+
+let mapCounts = new Array(areas.length).fill(0);
+const MIN_POP = 1000; // below this, per-resident rates are meaningless (shown as n/a)
+const rateOf = (c, i) => areas[i].pop >= MIN_POP ? c / areas[i].pop * 1000 : NaN;
+const metricVal = (i, counts = mapCounts) => state.metric === "count" ? counts[i] : state.metric === "density" ? counts[i] / areas[i].km2 : rateOf(counts[i], i);
+const fmtMetric = v => state.metric === "count" ? nf.format(v) : nf1.format(v);
+const UNIT = {count:"unitCount", density:"unitDensity", rate:"unitRate"};
+const SUBKEY = {count:"subCount", density:"subDensity", rate:"subRate"};
+
+function hoverArea(e, i) {
+  const a = areas[i];
+  showTip(e, a.name, [[t("tDistrict"), bezName[a.bez]], [t("tCases"), nf.format(mapCounts[i])], [t("tPerKm2"), nf1.format(mapCounts[i] / a.km2)], [t("tResidents"), nf.format(a.pop)], [t("tPerK"), a.pop >= MIN_POP ? nf1.format(rateOf(mapCounts[i], i)) : t("tNaLong")]]);
+}
+function selectArea(i) { state.sel = state.sel === i ? -1 : i; renderAll(); }
+
+function renderMap(m) {
+  mapCounts = new Array(areas.length).fill(0);
+  let total = 0;
+  for (let i = 0; i < N; i++) if (m[i]) { mapCounts[cases.p[i]]++; total++; }
+  const vals = areas.map((_, i) => metricVal(i));
+  const pos = vals.filter(v => v > 0).sort((a, b) => a - b);
+  const K = 7, raw = [];
+  for (let k = 1; k < K; k++) raw.push(pos[Math.floor(k * pos.length / K)]);
+  const rnd = v => v >= 10 ? Math.round(v) : Math.round(v * 10) / 10;
+  const breaks = [];
+  for (const b of raw.map(rnd)) if (b > 0 && (!breaks.length || b > breaks[breaks.length - 1])) breaks.push(b);
+  const nC = breaks.length + 1, stepOf = c => Math.round(1 + (c - 1) * 6 / Math.max(1, nC - 1));
+  const classOf = v => { if (Number.isNaN(v)) return "na"; if (v <= 0) return 0; let c = 1; for (const b of breaks) if (v >= b) c++; return stepOf(c); };
+  paths.forEach((p, i) => { p.setAttribute("class", "c" + classOf(vals[i]) + (i === state.sel ? " sel" : "")); });
+  if (state.sel >= 0) gAreas.append(paths[state.sel]);
+
+  const lg = document.getElementById("legend"); lg.replaceChildren();
+  const mk = (cls, text) => {
+    const d = document.createElement("div"); d.className = "sw";
+    const i = document.createElement("i"); i.className = cls; i.style.background = `var(--${cls === "c0" ? "zero" : cls === "cna" ? "na" : "seq-" + cls.slice(1)})`;
+    const s = document.createElement("span"); s.textContent = text; d.append(i, s); lg.append(d);
+  };
+  mk("c0", "0");
+  if (state.metric === "rate") mk("cna", t("na"));
+  for (let c = 1; c <= nC; c++) mk("c" + stepOf(c), c === 1 ? "<" + fmtNum(breaks[0]) : "≥" + fmtNum(breaks[c - 2]));
+  const u = document.createElement("span"); u.className = "u"; u.textContent = t(UNIT[state.metric]) + (state.metric === "rate" ? t("naNote") : ""); lg.append(u);
+  const [a, b] = periodRange();
+  document.getElementById("map-sub").textContent = t("mapSub", nf.format(total), fmtDay(a), fmtDay(b));
+  map.setAttribute("aria-label", t("arMap"));
+}
+const fmtNum = v => v === undefined ? "" : nf1.format(v);
+
+/* ================= top 10 ================= */
+function renderTop() {
+  const MIN = 10, host = document.getElementById("top");
+  let idx = areas.map((_, i) => i);
+  if (state.metric !== "count") idx = idx.filter(i => mapCounts[i] >= MIN && !Number.isNaN(metricVal(i)));
+  idx.sort((a, b) => metricVal(b) - metricVal(a));
+  const draw = n => {
+    const rows = idx.slice(0, n), max = rows.length ? metricVal(rows[0]) : 1;
+    hbars(host, rows.map(i => ({
+      label: areas[i].name, sub: bezName[areas[i].bez], value: metricVal(i), text: fmtMetric(metricVal(i)), active: i === state.sel,
+      tip: [[t("tCases"), nf.format(mapCounts[i])], [t("tPerKm2"), nf1.format(mapCounts[i] / areas[i].km2)], [t("tResidents"), nf.format(areas[i].pop)], [t("tPerK"), areas[i].pop >= MIN_POP ? nf1.format(rateOf(mapCounts[i], i)) : t("na")]],
+      onclick: () => selectArea(i)
+    })), max, {rank:true});
+    document.getElementById("top-h").textContent = t("topTitle", rows.length);
+  };
+  // Fill the height of the map card when the two cards sit side by side; otherwise show 15.
+  draw(10);
+  const card = host.closest(".card"), mapCard = map.closest(".card"), row = host.firstElementChild;
+  let n = 15;
+  if (row && Math.abs(card.getBoundingClientRect().top - mapCard.getBoundingClientRect().top) < 2) {
+    const used = host.getBoundingClientRect().top - card.getBoundingClientRect().top + 16 /* card padding */;
+    n = Math.max(10, Math.min(20, Math.floor((mapCard.getBoundingClientRect().height - used) / row.getBoundingClientRect().height + 0.9))); // may overshoot by a few px; the map card absorbs it
+  }
+  draw(n);
+  document.getElementById("top-sub").textContent = ({count:t("subCount"), density:t("topDensity"), rate:t("topRate")})[state.metric] + t("topHint");
+}
+
+/* ================= KPIs ================= */
+function renderKpis(m) {
+  let n = 0, sum = 0, att = 0; const vals = [];
+  for (let i = 0; i < N; i++) if (m[i]) { n++; sum += cases.v[i]; att += cases.a[i]; if (cases.v[i] > 0) vals.push(cases.v[i]); }
+  vals.sort((a, b) => a - b);
+  const med = vals.length ? vals[Math.floor(vals.length / 2)] : 0;
+  const [a, b] = periodRange(), days = b - a + 1;
+  const pct = n ? nf1.format(att / n * 100) + (lang === "de" ? " %" : "%") : "–";
+  const tiles = [
+    [nf.format(n), t("kCases"), t("kPerDay", nf1.format(n / days))],
+    [sum >= 1e6 ? eurBig(sum) : eur(sum), t("kValue"), t("kValueSub")],
+    [eur(med), t("kMedian"), t("kMedianSub")],
+    [pct, t("kAtt"), t("kAttSub", nf.format(att))]
+  ];
+  const k = document.getElementById("kpis"); k.replaceChildren();
+  for (const [v, l, s] of tiles) {
+    const d = document.createElement("div"); d.className = "card kpi";
+    for (const [cls, tx] of [["v", v], ["l", l], ["n", s]]) { const x = document.createElement("div"); x.className = cls; x.textContent = tx; d.append(x); }
+    k.append(d);
+  }
+}
+
+/* ================= timeline ================= */
+function renderTimeline() {
+  const m = mask({period:false}), counts = new Array(NM).fill(0);
+  for (let i = 0; i < N; i++) if (m[i]) counts[cases.m[i]]++;
+  const host = document.getElementById("tl"); host.replaceChildren();
+  const W = Math.max(300, host.clientWidth), H = 230, L = 44, R = 14, T = 12, B = 26, iw = W - L - R, ih = H - T - B;
+  const svg = el("svg", {width:W, height:H, viewBox:`0 0 ${W} ${H}`, role:"img", "aria-label":t("arTl")}, host);
+  const {max, step} = niceMax(Math.max(1, ...counts));
+  const X = p => L + p / NM * iw, Y = v => T + ih - v / max * ih;
+  for (let v = 0; v <= max + 1e-9; v += step) {
+    el("line", {x1:L, x2:W - R, y1:Y(v), y2:Y(v), stroke:v === 0 ? "var(--axis)" : "var(--grid)"}, svg);
+    const tx = el("text", {x:L - 8, y:Y(v) + 4, "text-anchor":"end", class:"ax"}, svg); tx.textContent = nf.format(v);
+  }
+  const dayPos = d => { let mi = 0; while (mi < NM - 1 && meta.monthStarts[mi + 1] <= d) mi++; return mi + (d - meta.monthStarts[mi]) / (meta.monthStarts[mi + 1] - meta.monthStarts[mi]); };
+  if (!isFull()) {
+    const [a, b] = periodRange(), x0 = X(dayPos(a)), x1 = X(Math.min(NM, dayPos(b + 1)));
+    el("rect", {x:x0, y:T, width:Math.max(2, x1 - x0), height:ih, fill:"var(--band)"}, svg);
+  }
+  const every = NM > 14 && iw < 620 ? 3 : NM > 10 ? 2 : 1;
+  for (let mi = 0; mi < NM; mi++) if (mi % every === 0) { const tx = el("text", {x:X(mi + .5), y:H - 8, "text-anchor":"middle", class:"ax"}, svg); tx.textContent = monthLabel(mi); }
+  const pts = counts.map((v, i) => [X(i + .5), Y(v)]);
+  if (NM > 1) {
+    const full = pts.slice(0, -1).map((p, i) => (i ? "L" : "M") + p[0] + " " + p[1]).join("");
+    if (NM > 2) el("path", {d:full, fill:"none", stroke:"var(--series-1)", "stroke-width":2, "stroke-linejoin":"round", "stroke-linecap":"round"}, svg);
+    const [p1, p2] = [pts[NM - 2], pts[NM - 1]];
+    el("path", {d:`M${p1[0]} ${p1[1]}L${p2[0]} ${p2[1]}`, fill:"none", stroke:"var(--series-1)", "stroke-width":2, "stroke-dasharray":"4 4", "stroke-linecap":"round"}, svg);
+  }
+  const last = pts[NM - 1];
+  el("circle", {cx:last[0], cy:last[1], r:4, fill:"var(--surface)", stroke:"var(--series-1)", "stroke-width":2}, svg);
+  const note = el("text", {x:last[0], y:Math.max(T + 10, last[1] - 10), "text-anchor":"end", class:"ax"}, svg); note.textContent = t("partial");
+  const cross = el("line", {y1:T, y2:T + ih, stroke:"var(--muted)", "stroke-dasharray":"2 3", visibility:"hidden"}, svg);
+  const dot = el("circle", {r:4, fill:"var(--series-1)", stroke:"var(--surface)", "stroke-width":2, visibility:"hidden"}, svg);
+  const hit = el("rect", {x:L, y:T, width:iw, height:ih, fill:"transparent", style:"cursor:pointer"}, svg);
+  const monthAt = e => Math.max(0, Math.min(NM - 1, Math.floor((e.clientX - svg.getBoundingClientRect().left - L) / iw * NM)));
+  hit.addEventListener("pointermove", e => {
+    const mi = monthAt(e);
+    cross.setAttribute("x1", pts[mi][0]); cross.setAttribute("x2", pts[mi][0]); cross.setAttribute("visibility", "visible");
+    dot.setAttribute("cx", pts[mi][0]); dot.setAttribute("cy", pts[mi][1]); dot.setAttribute("visibility", "visible");
+    showTip(e, monLongF.format(dayMs(meta.monthStarts[mi])) + (mi === NM - 1 && meta.monthStarts[NM] - 1 > meta.maxDay ? t("tipTo", fmtDay(meta.maxDay)) : ""), [[t("tCases"), nf.format(counts[mi])]]);
+  });
+  hit.addEventListener("pointerleave", () => { cross.setAttribute("visibility", "hidden"); dot.setAttribute("visibility", "hidden"); hideTip(); });
+  hit.addEventListener("click", e => { const mi = monthAt(e); if (monthOfRange() === mi) setRange(...FULL); else setRange(...monthRange(mi)); });
+  const sel = state.sel >= 0 ? ` · ${areas[state.sel].name}` : "";
+  document.getElementById("tl-sub").textContent = t("tlBase") + sel + (!isFull() ? t("tlShade") : "") + t("tlHint");
+  setTable("tl", [t("hMonth"), t("tCases")], counts.map((c, i) => [monLongF.format(dayMs(meta.monthStarts[i])), nf.format(c)]));
+}
+
+/* ================= hour of day ================= */
+function renderHour(m) {
+  const counts = new Array(24).fill(0); let all = 0, short = 0;
+  for (let i = 0; i < N; i++) if (m[i]) { all++; if (cases.h[i] >= 0) { counts[cases.h[i]]++; short++; } }
+  const host = document.getElementById("hr"); host.replaceChildren();
+  const W = Math.max(260, host.clientWidth), H = 210, L = 36, R = 6, T = 10, B = 24, iw = W - L - R, ih = H - T - B;
+  const svg = el("svg", {width:W, height:H, viewBox:`0 0 ${W} ${H}`, role:"img", "aria-label":t("arHr")}, host);
+  const {max, step} = niceMax(Math.max(1, ...counts), 3), bw = iw / 24;
+  const Y = v => T + ih - v / max * ih;
+  for (let v = 0; v <= max + 1e-9; v += step) {
+    el("line", {x1:L, x2:W - R, y1:Y(v), y2:Y(v), stroke:v === 0 ? "var(--axis)" : "var(--grid)"}, svg);
+    const tx = el("text", {x:L - 6, y:Y(v) + 4, "text-anchor":"end", class:"ax"}, svg); tx.textContent = nf.format(v);
+  }
+  counts.forEach((c, h) => {
+    const x = L + h * bw + 1, w = bw - 2, y = Y(c);
+    if (c > 0) el("path", {d:topRound(x, y, w, T + ih - y, 4), fill:"var(--series-1)"}, svg);
+    if (h % 3 === 0) { const tx = el("text", {x:L + h * bw + bw / 2, y:H - 6, "text-anchor":"middle", class:"ax"}, svg); tx.textContent = String(h).padStart(2, "0"); }
+    const hit = el("rect", {x:L + h * bw, y:T, width:bw, height:ih, fill:"transparent"}, svg);
+    hit.addEventListener("pointermove", e => showTip(e, `${String(h).padStart(2, "0")}:00–${String(h).padStart(2, "0")}:59`, [[t("tCases"), nf.format(c)], [t("tShare"), short ? nf1.format(c / short * 100) + (lang === "de" ? " %" : "%") : "–"]]));
+    hit.addEventListener("pointerleave", hideTip);
+  });
+  document.getElementById("hr-sub").textContent = t("hrSub", all ? Math.round(short / all * 100) : 0);
+  setTable("hr", [t("hHour"), t("tCases")], counts.map((c, h) => [String(h).padStart(2, "0") + ":00", nf.format(c)]));
+}
+
+/* ================= bike types ================= */
+function renderTypes(m) {
+  const c = new Array(meta.types.length).fill(0); let n = 0;
+  for (let i = 0; i < N; i++) if (m[i]) { c[cases.t[i]]++; n++; }
+  const items = c.map((v, i) => ({i, v})).filter(o => o.v > 0).sort((a, b) => b.v - a.v);
+  const pc = v => nf1.format(v / n * 100) + (lang === "de" ? " %" : "%");
+  hbars(document.getElementById("ty"), items.map(o => ({
+    label: typeLabel(o.i), value: o.v, text: nf.format(o.v), active: state.type === o.i,
+    tip: [[t("tCases"), nf.format(o.v)], [t("tShare"), pc(o.v)], ...(lang === "en" ? [[t("tRecorded"), meta.types[o.i]]] : [])]
+  })), items.length ? items[0].v : 1);
+  setTable("ty", [t("hType"), t("hRec"), t("tCases")], items.map(o => [typeLabel(o.i), meta.types[o.i], nf.format(o.v)]));
+}
+
+/* ================= districts ================= */
+function renderDistricts() {
+  const cnt = {}, km = {}, pp = {};
+  meta.bezirke.forEach(b => { cnt[b.id] = 0; km[b.id] = 0; pp[b.id] = 0; });
+  areas.forEach((a, i) => { cnt[a.bez] += mapCounts[i]; km[a.bez] += a.km2; pp[a.bez] += a.pop; });
+  const val = b => state.metric === "count" ? cnt[b] : state.metric === "density" ? cnt[b] / km[b] : cnt[b] / pp[b] * 1000;
+  const items = meta.bezirke.map(b => ({id:b.id, name:b.name, n:cnt[b.id], d:cnt[b.id] / km[b.id], r:cnt[b.id] / pp[b.id] * 1000, v:val(b.id)})).sort((a, b) => b.v - a.v);
+  const selBez = state.sel >= 0 ? areas[state.sel].bez : null;
+  document.getElementById("di-sub").textContent = t(SUBKEY[state.metric]);
+  hbars(document.getElementById("di"), items.map(o => ({
+    label: o.name, value: o.v, text: fmtMetric(o.v), active: o.id === selBez,
+    tip: [[t("tCases"), nf.format(o.n)], [t("tPerKm2"), nf1.format(o.d)], [t("tResidents"), nf.format(pp[o.id])], [t("tPerK"), nf1.format(o.r)]]
+  })), items[0].v);
+  setTable("di", [t("hDistrict"), t("tCases"), t("tPerKm2"), t("hPerK")], items.map(o => [o.name, nf.format(o.n), nf1.format(o.d), nf1.format(o.r)]));
+}
+
+/* ================= controls ================= */
+function btn(label, onclick, extra = {}) { const b = document.createElement("button"); b.textContent = label; b.addEventListener("click", onclick); Object.assign(b.dataset, extra); return b; }
+function buildLabels() { // (re)creates every translated control; safe to call on language change
+  const sp = document.getElementById("seg-period");
+  sp.replaceChildren(...presets().map(p => btn(p.label, () => setRange(...p.r), {id:p.id})));
+  const sm = document.getElementById("seg-metric");
+  sm.replaceChildren(...[["count", "mCount"], ["density", "mDensity"], ["rate", "mRate"]].map(([id, k]) => btn(t(k), () => { state.metric = id; renderAll(); }, {id})));
+  const mo = document.getElementById("sel-month"); mo.replaceChildren(new Option(t("monthPh"), -1));
+  for (let m = NM - 1; m >= 0; m--) mo.append(new Option(monLongF.format(dayMs(meta.monthStarts[m])), m));
+  const sd = document.getElementById("sel-delikt"); sd.replaceChildren(new Option(t("all"), -1));
+  meta.delikte.forEach((d, i) => sd.append(new Option(deliktLabel(i), i))); sd.value = state.delikt;
+  const st = document.getElementById("sel-type"); st.replaceChildren(new Option(t("all"), -1));
+  meta.types.forEach((_, i) => st.append(new Option(typeLabel(i), i))); st.value = state.type;
+  document.getElementById("seg-period").setAttribute("aria-label", t("period"));
+}
+function applyStatic() {
+  document.documentElement.lang = lang; document.title = t("docTitle");
+  document.querySelectorAll("[data-i18n]").forEach(e => { e.textContent = t(e.dataset.i18n); });
+  document.querySelectorAll("[data-i18n-aria]").forEach(e => e.setAttribute("aria-label", t(e.dataset.i18nAria)));
+  document.querySelectorAll(".tbtn").forEach(b => { b.textContent = b.getAttribute("aria-pressed") === "true" ? t("chart") : t("tbl"); });
+  document.getElementById("chip").setAttribute("aria-label", t("clearSel"));
+  const ul = document.getElementById("notes"); ul.replaceChildren();
+  I18N[lang].notes.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.append(li); });
+}
+function initControls() {
+  const fromI = document.getElementById("d-from"), toI = document.getElementById("d-to");
+  for (const i of [fromI, toI]) { i.min = isoDay(meta.minDay); i.max = isoDay(meta.maxDay); }
+  fromI.addEventListener("change", () => { const v = dayFromIso(fromI.value); if (!Number.isNaN(v)) setRange(v, Math.max(v, state.range[1])); else syncControls(); });
+  toI.addEventListener("change", () => { const v = dayFromIso(toI.value); if (!Number.isNaN(v)) setRange(Math.min(v, state.range[0]), v); else syncControls(); });
+  document.getElementById("sel-month").addEventListener("change", e => { const m = +e.target.value; if (m >= 0) setRange(...monthRange(m)); });
+  document.getElementById("sel-delikt").addEventListener("change", e => { state.delikt = +e.target.value; renderAll(); });
+  document.getElementById("sel-type").addEventListener("change", e => { state.type = +e.target.value; renderAll(); });
+  document.getElementById("chip").addEventListener("click", () => { state.sel = -1; renderAll(); });
+  document.querySelectorAll("#seg-lang button").forEach(b => b.addEventListener("click", () => {
+    lang = b.dataset.lang; try { localStorage.setItem("sbLang", lang); } catch (e) {}
+    setLocale(); applyStatic(); buildLabels(); renderAll();
+  }));
+}
+function syncControls() {
+  const pr = presets();
+  document.querySelectorAll("#seg-period button").forEach(b => { const p = pr.find(x => x.id === b.dataset.id); b.setAttribute("aria-pressed", !!p && p.r[0] === state.range[0] && p.r[1] === state.range[1]); });
+  document.querySelectorAll("#seg-metric button").forEach(b => b.setAttribute("aria-pressed", b.dataset.id === state.metric));
+  document.querySelectorAll("#seg-lang button").forEach(b => b.setAttribute("aria-pressed", b.dataset.lang === lang));
+  document.getElementById("sel-month").value = monthOfRange();
+  document.getElementById("d-from").value = isoDay(state.range[0]); document.getElementById("d-to").value = isoDay(state.range[1]);
+  document.getElementById("sel-delikt").value = state.delikt; document.getElementById("sel-type").value = state.type;
+  const chip = document.getElementById("chip");
+  if (state.sel >= 0) { chip.hidden = false; chip.textContent = `${areas[state.sel].name} (${bezName[areas[state.sel].bez]}) ✕`; } else chip.hidden = true;
+}
+
+function renderAll() {
+  hideTip(); syncControls();
+  const mMap = mask({sel:false}), mSel = mask();
+  renderMap(mMap); renderTop(); renderDistricts();
+  renderKpis(mSel); renderHour(mSel); renderTypes(mSel); renderTimeline();
+  document.getElementById("map-h").textContent = state.sel >= 0 ? t("mapTitleSel", areas[state.sel].name) : t("mapTitle");
+  document.getElementById("sub").textContent = t("sub", fmtDay(meta.minDay), fmtDay(meta.maxDay), nf.format(meta.n), dateF.format(Date.parse(meta.updated + "T00:00:00Z")));
+}
+
+/* ================= boot ================= */
+applyStatic(); buildLabels(); initControls(); renderAll();
+let rt; new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(() => { renderTimeline(); renderHour(mask()); renderTop(); }, 80); }).observe(document.body);
+</script>
+</body>
+</html>
