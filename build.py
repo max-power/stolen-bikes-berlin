@@ -15,7 +15,6 @@ import pandas as pd
 
 ROOT = Path(__file__).parent
 CSV = ROOT / "Fahrraddiebstahl.csv"
-XLSX = ROOT / "lor_2021-01-01_k3_uebersicht_id_namen.xlsx"
 GEO = ROOT / "data_raw" / "plr_2021.geojson"
 TEMPLATE = ROOT / "template.html"
 OUT = ROOT / "index.html"
@@ -118,10 +117,15 @@ def to_path(geom) -> str:
     return "".join(parts)
 
 
-# ---------- lookup tables (Excel) ----------
-lor = pd.read_excel(XLSX, sheet_name="LOR_2023_Übersicht", dtype=str)
-bez_names = dict(zip(*pd.read_excel(XLSX, sheet_name="LOR_2023_BEZ", dtype=str).T.values))
-plr_meta = {r.PLR_ID: (r.PLR, r.BZR, r.BEZ_ID) for r in lor.itertuples()}
+# ---------- lookup tables ----------
+# The LOR 2021 boundary file carries the keys and names of all levels, e.g. bez = "01 - Mitte".
+plr_meta, bez_names = {}, {}
+for f in geo["features"]:
+    pr = f["properties"]
+    bez_id, bez_name = (x.strip() for x in pr["bez"].split(" - ", 1))
+    plr_meta[pr["plr_id"]] = (pr["plr_name"], pr["bzr_name"], bez_id)
+    bez_names[bez_id] = bez_name
+assert len(plr_meta) == len(geo["features"]) == 542 and len(bez_names) == 12, "unexpected LOR structure in the boundary file"
 
 # ---------- population (Amt für Statistik, Einwohnerregister, 31.12.2024, LOR 2021) ----------
 # data_raw/ewr/pop_2024.csv = RAUMID + E_E (residents) per planning area. The source file lists the
@@ -129,7 +133,7 @@ plr_meta = {r.PLR_ID: (r.PLR, r.BZR, r.BEZ_ID) for r in lor.itertuples()}
 POP_ID_ALIAS = {"06200318": "06200418"}
 pop_df = pd.read_csv(ROOT / "data_raw" / "ewr" / "pop_2024.csv", dtype={"RAUMID": str})
 pop_df["RAUMID"] = pop_df.RAUMID.replace(POP_ID_ALIAS)
-assert pop_df.RAUMID.is_unique and set(pop_df.RAUMID) == set(plr_meta), "population IDs do not match LOR 2021 key list"
+assert pop_df.RAUMID.is_unique and set(pop_df.RAUMID) == set(plr_meta), "population IDs do not match the LOR 2021 boundaries"
 pop = dict(zip(pop_df.RAUMID, pop_df["pop"].astype(int)))
 
 areas = []

@@ -13,9 +13,10 @@ python3 build.py            # rebuild index.html from the local CSV
 python3 build.py --fetch    # download the latest CSV from Polizei Berlin first, then rebuild
 ```
 
-`build.py` joins the cases to the LOR 2021 planning areas (boundaries in `data_raw/plr_2021.geojson`,
-names from the LOR key list `.xlsx`, residents in `data_raw/ewr/pop_2024.csv`), simplifies the
-geometry and inlines everything into `template.html` to produce `index.html`.
+`build.py` joins the cases to the LOR 2021 planning areas (boundaries and names from
+`data_raw/plr_2021.geojson`, residents from `data_raw/ewr/pop_2024.csv`), simplifies the geometry and
+inlines everything into `template.html` to produce `index.html`. `index.html` is generated and not
+tracked in git; run the build to create it.
 `--fetch` refuses anything that is not the expected CSV (web page, wrong columns, too few rows).
 
 ## Hosting on GitHub Pages
