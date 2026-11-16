@@ -3,3 +3,8 @@
 Fahrraddiebstahl.prev.csv
 # local preview-server config
 .claude/
+
+# build/test leftovers
+_site/
+.venv/
+__pycache__/
