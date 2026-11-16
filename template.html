@@ -43,8 +43,8 @@ body { margin:0; background:var(--page); color:var(--ink); font:14px/1.45 system
 .hdr { display:flex; justify-content:space-between; align-items:flex-start; gap:12px; flex-wrap:wrap; }
 h1 { font-size:26px; line-height:1.2; margin:0 0 4px; font-weight:650; letter-spacing:-.01em; }
 .sub { color:var(--ink-2); margin:0 0 18px; max-width:70ch; }
-.filters { display:flex; flex-wrap:wrap; gap:10px 16px; align-items:center; margin-bottom:16px; }
-.fg { display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.filters { display:flex; flex-wrap:wrap; gap:12px 16px; align-items:flex-end; margin-bottom:16px; }
+.fg { display:flex; flex-direction:column; align-items:flex-start; gap:4px; min-width:0; max-width:100%; } /* label above its control */
 .seg { display:inline-flex; border:1px solid var(--border); border-radius:8px; overflow:hidden; background:var(--surface); }
 .seg button { all:unset; cursor:pointer; padding:6px 12px; color:var(--ink-2); font-size:13px; white-space:nowrap; }
 .seg button + button { border-left:1px solid var(--border); }
@@ -52,7 +52,50 @@ h1 { font-size:26px; line-height:1.2; margin:0 0 4px; font-weight:650; letter-sp
 .seg button[aria-pressed="true"] { background:var(--ink); color:var(--surface); font-weight:600; }
 .seg button:focus-visible, select:focus-visible, input:focus-visible, .hrow:focus-visible, .chip:focus-visible, .tbtn:focus-visible { outline:2px solid var(--series-1); outline-offset:2px; }
 select, input[type="date"] { background:var(--surface); color:var(--ink); border:1px solid var(--border); border-radius:8px; padding:5px 8px; font:inherit; font-size:13px; max-width:220px; }
+#filters select { height:33px; box-sizing:border-box; } /* same height as the period control */
 .lbl-f { color:var(--muted); font-size:12px; }
+.pwrap { position:relative; }
+.pgroup { display:inline-flex; border:1px solid var(--border); border-radius:8px; background:var(--surface); overflow:hidden; max-width:100%; }
+.pgroup button { all:unset; box-sizing:border-box; cursor:pointer; color:var(--ink-2); display:inline-flex; align-items:center; gap:8px; padding:6px 10px; font-size:13px; }
+.pgroup button + button { border-left:1px solid var(--border); }
+.pgroup button:hover:not(:disabled) { background:var(--ghost); }
+.pgroup button:disabled { opacity:.35; cursor:default; }
+.pgroup button:focus-visible, .pop button:focus-visible { outline:2px solid var(--series-1); outline-offset:-2px; }
+.pgroup .pchip { color:var(--ink); flex:1 1 auto; min-width:0; overflow:hidden; } /* beats `.pgroup button { all:unset }` */
+.pgroup .pstep { flex:none; }
+.pchip .pn { font-weight:600; white-space:nowrap; flex:none; }
+.pchip .pd { color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.pop { position:absolute; top:calc(100% + 6px); left:0; z-index:30; background:var(--surface); border:1px solid var(--border); border-radius:12px; box-shadow:0 8px 28px rgba(0,0,0,.2); width:min(560px, calc(100vw - 32px)); }
+.pop[hidden] { display:none; }
+.pop-body { display:grid; grid-template-columns:170px 1fr; max-height:min(420px, 60vh); }
+.pop-presets { display:flex; flex-direction:column; padding:8px; border-right:1px solid var(--border); overflow:auto; }
+.pop-presets button { all:unset; box-sizing:border-box; cursor:pointer; display:flex; align-items:center; gap:6px; padding:6px 8px; border-radius:6px; font-size:13px; color:var(--ink); }
+.pop-presets button:hover { background:var(--ghost); }
+.pop-presets .ck { width:14px; flex:none; font-weight:700; }
+.pop-presets button.act { font-weight:600; }
+.pop-presets hr { border:0; border-top:1px solid var(--grid); margin:6px 0; width:100%; }
+.pop-months { padding:10px 12px; overflow:auto; }
+.pop-hint { color:var(--muted); font-size:12px; margin-bottom:8px; min-height:1.4em; }
+.yr { margin-bottom:10px; }
+.yr b { display:block; font-size:12px; color:var(--ink-2); margin-bottom:4px; }
+.mgrid { display:grid; grid-template-columns:repeat(4,1fr); gap:4px; }
+.mgrid button { all:unset; box-sizing:border-box; cursor:pointer; text-align:center; padding:6px 0; border-radius:6px; font-size:13px; color:var(--ink); }
+.mgrid button:hover:not(:disabled) { background:var(--ghost); }
+.mgrid button:disabled { color:var(--muted); opacity:.4; cursor:default; }
+.mgrid button.part { background:var(--band); }
+.mgrid button.in { background:var(--series-1); color:#fff; }
+.mgrid button.anchor { outline:2px solid var(--ink); outline-offset:1px; }
+.pop-foot { display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; padding:10px 12px; border-top:1px solid var(--border); }
+.pop-foot .sp { flex:1; }
+.pbtn { all:unset; box-sizing:border-box; cursor:pointer; padding:5px 12px; border-radius:8px; border:1px solid var(--border); font-size:13px; color:var(--ink); }
+.pbtn:hover { background:var(--ghost); }
+.pbtn.primary { background:var(--ink); color:var(--surface); border-color:var(--ink); font-weight:600; }
+@media (max-width:640px) {
+  .pop { position:fixed; left:0; right:0; bottom:0; top:auto; width:auto; border-radius:14px 14px 0 0; max-height:85vh; overflow:auto; }
+  .pop-body { grid-template-columns:1fr; max-height:none; }
+  .pop-presets { flex-direction:row; flex-wrap:wrap; border-right:0; border-bottom:1px solid var(--border); }
+  .pop-presets hr { display:none; }
+}
 .chip { all:unset; cursor:pointer; display:inline-flex; gap:8px; align-items:center; background:var(--ink); color:var(--surface); border-radius:999px; padding:4px 12px; font-size:13px; }
 .chip[hidden] { display:none; }
 .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:12px; }
@@ -128,11 +171,30 @@ table.t td:last-child, table.t th:last-child { text-align:right; }
   <p class="sub" id="sub"></p>
 
   <div class="filters" id="filters">
-    <div class="fg"><span class="lbl-f" data-i18n="period">Period</span><span class="seg" id="seg-period" role="group"></span></div>
-    <div class="fg"><label class="lbl-f" for="sel-month" data-i18n="month">Month</label><select id="sel-month"></select></div>
-    <div class="fg">
-      <label class="lbl-f" for="d-from" data-i18n="from">From</label><input type="date" id="d-from">
-      <label class="lbl-f" for="d-to" data-i18n="to">To</label><input type="date" id="d-to">
+    <div class="fg pwrap" id="pwrap">
+      <span class="lbl-f" id="period-lbl" data-i18n="period">Period</span>
+      <div class="pgroup" role="group" aria-labelledby="period-lbl">
+        <button type="button" class="pstep" id="p-prev" data-i18n-aria="pPrev"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M10 3 5 8l5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+        <button type="button" class="pchip" id="pchip" aria-haspopup="dialog" aria-expanded="false" aria-controls="pop">
+          <svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><rect x="2" y="3" width="12" height="11" rx="2" fill="none" stroke="currentColor" stroke-width="1.5"/><path d="M2 7h12M5 1.5v3M11 1.5v3" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/></svg>
+          <span class="pn" id="pn"></span><span class="pd" id="pd"></span>
+          <svg viewBox="0 0 16 16" width="12" height="12" aria-hidden="true"><path d="m4 6 4 4 4-4" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </button>
+        <button type="button" class="pstep" id="p-next" data-i18n-aria="pNext"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="m6 3 5 5-5 5" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg></button>
+      </div>
+      <div class="pop" id="pop" role="dialog" data-i18n-aria="pDialog" hidden>
+        <div class="pop-body">
+          <div class="pop-presets" id="pop-presets" role="group" data-i18n-aria="pPresets"></div>
+          <div class="pop-months"><div class="pop-hint" id="pop-hint"></div><div id="pop-grid"></div></div>
+        </div>
+        <div class="pop-foot">
+          <label class="lbl-f" for="d-from" data-i18n="from">From</label><input type="date" id="d-from">
+          <label class="lbl-f" for="d-to" data-i18n="to">To</label><input type="date" id="d-to">
+          <span class="sp"></span>
+          <button type="button" class="pbtn" id="pop-cancel" data-i18n="cancel">Cancel</button>
+          <button type="button" class="pbtn primary" id="pop-apply" data-i18n="apply">Apply</button>
+        </div>
+      </div>
     </div>
     <div class="fg"><label class="lbl-f" for="sel-delikt" data-i18n="offense">Offense</label><select id="sel-delikt"></select></div>
     <div class="fg"><label class="lbl-f" for="sel-type" data-i18n="biketype">Bike type</label><select id="sel-type"></select></div>
@@ -194,6 +256,8 @@ const I18N = {
     sub:(a,b,n,u)=>`Polizeilich erfasste Fahrraddiebstähle sowie Keller- und Bodeneinbrüche mit Fahrrädern, ${a} – ${b} (${n} Fälle nach Beginn des Tatzeitraums; Stand ${u}). Planungsraum auf der Karte anklicken für Details.`,
     period:"Zeitraum", month:"Monat", monthPh:"Monat wählen", from:"Von", to:"Bis", offense:"Delikt", biketype:"Fahrradart", all:"Alle",
     last90:"Letzte 90 Tage", last30:"Letzte 30 Tage", clearSel:"Auswahl des Planungsraums aufheben",
+    allData:"Alle Daten", curMonth:"Aktueller Monat", prevMonth:"Vorheriger Monat", pPrev:"Vorheriger Zeitraum", pNext:"Nächster Zeitraum", pDialog:"Zeitraum wählen", pPresets:"Schnellauswahl",
+    pHint1:"Monat anklicken – ein zweiter Klick wählt einen Bereich.", pHint2:"Jetzt den letzten Monat des Bereichs anklicken.", apply:"Anwenden", cancel:"Abbrechen",
     kCases:"Gemeldete Fälle", kPerDay:n=>`${n} pro Tag`, kValue:"Wert des Diebesguts", kValueSub:"Summe der gemeldeten Werte",
     kMedian:"Medianwert je Fall", kMedianSub:"Fälle mit Wert > 0 €", kAtt:"Versuche", kAttSub:n=>`${n} versucht, nicht vollendet`,
     mapTitle:"Wo Fahrräder gestohlen werden", mapTitleSel:n=>`Wo Fahrräder gestohlen werden · ${n} markiert`,
@@ -222,6 +286,8 @@ const I18N = {
     sub:(a,b,n,u)=>`Police-reported bicycle thefts and cellar/storage burglaries involving bikes, ${a} – ${b} (${n} cases by start of offence window; data as of ${u}). Click a planning area on the map to drill into it.`,
     period:"Period", month:"Month", monthPh:"Pick a month", from:"From", to:"To", offense:"Offense", biketype:"Bike type", all:"All",
     last90:"Last 90 days", last30:"Last 30 days", clearSel:"Clear planning area selection",
+    allData:"All data", curMonth:"Current month", prevMonth:"Previous month", pPrev:"Previous period", pNext:"Next period", pDialog:"Choose period", pPresets:"Quick select",
+    pHint1:"Click a month – a second click selects a range.", pHint2:"Now click the last month of the range.", apply:"Apply", cancel:"Cancel",
     kCases:"Reported cases", kPerDay:n=>`${n} per day`, kValue:"Value of stolen goods", kValueSub:"sum of reported values",
     kMedian:"Median value per case", kMedianSub:"cases with a value > €0", kAtt:"Attempts", kAttSub:n=>`${n} attempted, not completed`,
     mapTitle:"Where bikes get stolen", mapTitleSel:n=>`Where bikes get stolen · ${n} highlighted`,
@@ -254,7 +320,7 @@ let lang = "de"; // German is the default; a language chosen via the switch is r
 try { const s = localStorage.getItem("sbLang"); if (s && I18N[s]) lang = s; } catch (e) {}
 const t = (k, ...a) => { const v = I18N[lang][k] ?? I18N.de[k] ?? k; return typeof v === "function" ? v(...a) : v; };
 
-let nf, nf1, eurF, dateF, monF, monLongF;
+let nf, nf1, eurF, dateF, monF, monLongF, monShortF;
 function setLocale() {
   const loc = lang === "de" ? "de-DE" : "en-GB";
   nf = new Intl.NumberFormat(loc); nf1 = new Intl.NumberFormat(loc, {maximumFractionDigits:1});
@@ -262,6 +328,7 @@ function setLocale() {
   dateF = new Intl.DateTimeFormat(loc, {day:"numeric", month:"short", year:"numeric", timeZone:"UTC"});
   monF = new Intl.DateTimeFormat(loc, {month:"short", year:"2-digit", timeZone:"UTC"});
   monLongF = new Intl.DateTimeFormat(loc, {month:"long", year:"numeric", timeZone:"UTC"});
+  monShortF = new Intl.DateTimeFormat(loc, {month:"short", timeZone:"UTC"});
 }
 setLocale();
 const eur = n => eurF.format(Math.round(n));
@@ -281,11 +348,15 @@ const state = {range:[...FULL], delikt:-1, type:-1, metric:"count", sel:-1};
 const periodRange = () => state.range;
 const isFull = () => state.range[0] === FULL[0] && state.range[1] === FULL[1];
 const monthRange = m => [Math.max(meta.minDay, meta.monthStarts[m]), Math.min(meta.maxDay, meta.monthStarts[m + 1] - 1)];
-function monthOfRange() { for (let m = 0; m < NM; m++) { const r = monthRange(m); if (r[0] === state.range[0] && r[1] === state.range[1]) return m; } return -1; }
-function presets() {
-  const mx = meta.maxDay, mn = meta.minDay, list = [{id:"all", label:t("all"), r:[mn, mx]}];
-  if (meta.years.length > 1) meta.years.forEach(([y, a, b]) => list.push({id:"y" + y, label:String(y), r:[a, b]}));
-  list.push({id:"d90", label:t("last90"), r:[Math.max(mn, mx - 89), mx]}, {id:"d30", label:t("last30"), r:[Math.max(mn, mx - 29), mx]});
+function monthOfRange(r = state.range) { for (let m = 0; m < NM; m++) { const mr = monthRange(m); if (mr[0] === r[0] && mr[1] === r[1]) return m; } return -1; }
+function presets() { // quick-select list shown in the period popover
+  const mx = meta.maxDay, mn = meta.minDay, list = [
+    {id:"all", label:t("allData"), r:[mn, mx], dates:true},
+    {id:"d30", label:t("last30"), r:[Math.max(mn, mx - 29), mx], dates:true},
+    {id:"d90", label:t("last90"), r:[Math.max(mn, mx - 89), mx], dates:true},
+    {id:"cm", label:t("curMonth"), r:monthRange(NM - 1), sep:true}];
+  if (NM > 1) list.push({id:"pm", label:t("prevMonth"), r:monthRange(NM - 2)});
+  if (meta.years.length > 1) meta.years.forEach(([y, a, b], i) => list.push({id:"y" + y, label:String(y), r:[a, b], sep:i === 0}));
   return list;
 }
 function setRange(a, b) {
@@ -519,7 +590,7 @@ function renderTimeline() {
     const [a, b] = periodRange(), x0 = X(dayPos(a)), x1 = X(Math.min(NM, dayPos(b + 1)));
     el("rect", {x:x0, y:T, width:Math.max(2, x1 - x0), height:ih, fill:"var(--band)"}, svg);
   }
-  const every = NM > 14 && iw < 620 ? 3 : NM > 10 ? 2 : 1;
+  const every = NM > 14 && iw < 420 ? 4 : NM > 14 && iw < 620 ? 3 : NM > 10 ? 2 : 1;
   for (let mi = 0; mi < NM; mi++) if (mi % every === 0) { const tx = el("text", {x:X(mi + .5), y:H - 8, "text-anchor":"middle", class:"ax"}, svg); tx.textContent = monthLabel(mi); }
   const pts = counts.map((v, i) => [X(i + .5), Y(v)]);
   if (NM > 1) {
@@ -631,17 +702,12 @@ function renderDistricts() {
 /* ================= controls ================= */
 function btn(label, onclick, extra = {}) { const b = document.createElement("button"); b.textContent = label; b.addEventListener("click", onclick); Object.assign(b.dataset, extra); return b; }
 function buildLabels() { // (re)creates every translated control; safe to call on language change
-  const sp = document.getElementById("seg-period");
-  sp.replaceChildren(...presets().map(p => btn(p.label, () => setRange(...p.r), {id:p.id})));
   const sm = document.getElementById("seg-metric");
   sm.replaceChildren(...[["count", "mCount"], ["density", "mDensity"], ["rate", "mRate"]].map(([id, k]) => btn(t(k), () => { state.metric = id; renderAll(); }, {id})));
-  const mo = document.getElementById("sel-month"); mo.replaceChildren(new Option(t("monthPh"), -1));
-  for (let m = NM - 1; m >= 0; m--) mo.append(new Option(monLongF.format(dayMs(meta.monthStarts[m])), m));
   const sd = document.getElementById("sel-delikt"); sd.replaceChildren(new Option(t("all"), -1));
   meta.delikte.forEach((d, i) => sd.append(new Option(deliktLabel(i), i))); sd.value = state.delikt;
   const st = document.getElementById("sel-type"); st.replaceChildren(new Option(t("all"), -1));
   meta.types.forEach((_, i) => st.append(new Option(typeLabel(i), i))); st.value = state.type;
-  document.getElementById("seg-period").setAttribute("aria-label", t("period"));
 }
 function applyStatic() {
   document.documentElement.lang = lang; document.title = t("docTitle");
@@ -652,12 +718,103 @@ function applyStatic() {
   const ul = document.getElementById("notes"); ul.replaceChildren();
   I18N[lang].notes.forEach(x => { const li = document.createElement("li"); li.textContent = x; ul.append(li); });
 }
+/* ---- period picker: chip + popover (presets, month grid, From/To) + previous/next stepper ---- */
+const $ = id => document.getElementById(id);
+const rEq = (x, y) => x[0] === y[0] && x[1] === y[1];
+const clampDay = d => Math.max(meta.minDay, Math.min(meta.maxDay, d));
+const Y0 = new Date(D0).getUTCFullYear(), M0 = new Date(D0).getUTCMonth();
+const monthIdx = (y, mo) => (y - Y0) * 12 + (mo - M0);
+function describeRange(r) { // chip text: a name when the range is a month / year / preset, plus dates when useful
+  const dates = fmtDay(r[0]) + " – " + fmtDay(r[1]), m = monthOfRange(r);
+  if (m >= 0) return {name:monLongF.format(dayMs(meta.monthStarts[m])), dates:""};
+  const p = presets().find(x => rEq(x.r, r));
+  return p ? {name:p.label, dates:p.dates ? dates : ""} : {name:"", dates};
+}
+function shifted(dir) { // the same-sized period before (-1) / after (+1) the current one, or null if outside the data
+  const r = state.range, yi = meta.years.findIndex(([y, a, b]) => a === r[0] && b === r[1]);
+  if (meta.years.length > 1 && yi >= 0) { const y = meta.years[yi + dir]; return y ? [y[1], y[2]] : null; }
+  let m1 = -1, m2 = -1;
+  for (let m = 0; m < NM; m++) { const mr = monthRange(m); if (mr[0] === r[0]) m1 = m; if (mr[1] === r[1]) m2 = m; }
+  if (m1 >= 0 && m2 >= m1) { const k = m2 - m1 + 1, a = m1 + dir * k, b = m2 + dir * k; return a < 0 || b >= NM ? null : [monthRange(a)[0], monthRange(b)[1]]; }
+  const n = r[1] - r[0] + 1, a = r[0] + dir * n, b = r[1] + dir * n;
+  return a < meta.minDay || b > meta.maxDay ? null : [a, b];
+}
+function updatePeriodChip() {
+  const d = describeRange(state.range);
+  $("pn").textContent = d.name; $("pn").hidden = !d.name; $("pd").textContent = d.dates; $("pd").hidden = !d.dates;
+  $("pchip").setAttribute("aria-label", (t("period") + ": " + d.name + " " + d.dates).replace(/\s+/g, " ").trim());
+  $("p-prev").disabled = !shifted(-1); $("p-next").disabled = !shifted(1);
+}
+let popOpen = false, draft = null; // draft = {a, b, anchor (month index while picking a range), hover}
+function buildPop() {
+  const pr = $("pop-presets"); pr.replaceChildren();
+  presets().forEach(p => {
+    if (p.sep) pr.append(document.createElement("hr"));
+    const b = document.createElement("button"); b.type = "button";
+    const ck = document.createElement("span"); ck.className = "ck"; b.append(ck, document.createTextNode(p.label)); b._p = p;
+    b.addEventListener("click", () => { closePop(false); setRange(...p.r); $("pchip").focus(); });
+    pr.append(b);
+  });
+  const g = $("pop-grid"); g.replaceChildren();
+  const lastY = new Date(dayMs(meta.maxDay)).getUTCFullYear();
+  for (let y = Y0; y <= lastY; y++) {
+    const row = document.createElement("div"); row.className = "yr";
+    const h = document.createElement("b"); h.textContent = y; row.append(h);
+    const grid = document.createElement("div"); grid.className = "mgrid";
+    for (let mo = 0; mo < 12; mo++) {
+      const m = monthIdx(y, mo), b = document.createElement("button"); b.type = "button";
+      b.textContent = monShortF.format(Date.UTC(y, mo, 1)); b.dataset.m = m; b.setAttribute("aria-label", monLongF.format(Date.UTC(y, mo, 1)));
+      if (m < 0 || m >= NM) b.disabled = true;
+      else {
+        b.addEventListener("click", () => pickMonth(m));
+        b.addEventListener("pointerenter", () => { if (draft && draft.anchor !== null) { draft.hover = m; paintPop(); } });
+      }
+      grid.append(b);
+    }
+    row.append(grid); g.append(row);
+  }
+}
+function pickMonth(m) {
+  if (draft.anchor === null) { [draft.a, draft.b] = monthRange(m); draft.anchor = m; }
+  else { const lo = Math.min(draft.anchor, m), hi = Math.max(draft.anchor, m); draft.a = monthRange(lo)[0]; draft.b = monthRange(hi)[1]; draft.anchor = null; }
+  draft.hover = null; paintPop();
+}
+function paintPop() {
+  const act = presets().find(p => rEq(p.r, state.range));
+  $("pop-presets").querySelectorAll("button").forEach(b => { const on = !!act && b._p.id === act.id; b.firstChild.textContent = on ? "✓" : ""; b.classList.toggle("act", on); });
+  let lo = draft.a, hi = draft.b;
+  if (draft.anchor !== null) { const h = draft.hover ?? draft.anchor; lo = monthRange(Math.min(draft.anchor, h))[0]; hi = monthRange(Math.max(draft.anchor, h))[1]; }
+  $("pop-grid").querySelectorAll(".mgrid button:not(:disabled)").forEach(b => {
+    const m = +b.dataset.m, r = monthRange(m), inside = r[0] >= lo && r[1] <= hi;
+    b.classList.toggle("in", inside); b.classList.toggle("part", !inside && r[0] <= hi && r[1] >= lo); b.classList.toggle("anchor", draft.anchor === m);
+  });
+  $("pop-hint").textContent = draft.anchor === null ? t("pHint1") : t("pHint2");
+  $("d-from").value = isoDay(draft.a); $("d-to").value = isoDay(draft.b);
+}
+function openPop() {
+  draft = {a:state.range[0], b:state.range[1], anchor:null, hover:null};
+  popOpen = true; $("pop").hidden = false; $("pchip").setAttribute("aria-expanded", "true");
+  buildPop(); paintPop();
+  ($("pop-presets").querySelector("button.act") || $("pop-presets").querySelector("button")).focus();
+}
+function closePop(refocus = true) {
+  if (!popOpen) return;
+  popOpen = false; draft = null; $("pop").hidden = true; $("pchip").setAttribute("aria-expanded", "false");
+  if (refocus) $("pchip").focus();
+}
+function initPeriod() {
+  for (const i of [$("d-from"), $("d-to")]) { i.min = isoDay(meta.minDay); i.max = isoDay(meta.maxDay); }
+  $("pchip").addEventListener("click", () => (popOpen ? closePop() : openPop()));
+  for (const [id, dir] of [["p-prev", -1], ["p-next", 1]]) $(id).addEventListener("click", () => { const r = shifted(dir); if (r) setRange(...r); });
+  $("d-from").addEventListener("change", () => { const v = dayFromIso($("d-from").value); if (Number.isNaN(v) || !draft) return; draft.anchor = null; draft.a = clampDay(v); draft.b = Math.max(draft.a, draft.b); paintPop(); });
+  $("d-to").addEventListener("change", () => { const v = dayFromIso($("d-to").value); if (Number.isNaN(v) || !draft) return; draft.anchor = null; draft.b = clampDay(v); draft.a = Math.min(draft.a, draft.b); paintPop(); });
+  $("pop-apply").addEventListener("click", () => { const {a, b} = draft; closePop(false); setRange(a, b); $("pchip").focus(); });
+  $("pop-cancel").addEventListener("click", () => closePop());
+  document.addEventListener("keydown", e => { if (e.key === "Escape" && popOpen) closePop(); });
+  document.addEventListener("pointerdown", e => { if (popOpen && !$("pwrap").contains(e.target)) closePop(false); });
+}
 function initControls() {
-  const fromI = document.getElementById("d-from"), toI = document.getElementById("d-to");
-  for (const i of [fromI, toI]) { i.min = isoDay(meta.minDay); i.max = isoDay(meta.maxDay); }
-  fromI.addEventListener("change", () => { const v = dayFromIso(fromI.value); if (!Number.isNaN(v)) setRange(v, Math.max(v, state.range[1])); else syncControls(); });
-  toI.addEventListener("change", () => { const v = dayFromIso(toI.value); if (!Number.isNaN(v)) setRange(Math.min(v, state.range[0]), v); else syncControls(); });
-  document.getElementById("sel-month").addEventListener("change", e => { const m = +e.target.value; if (m >= 0) setRange(...monthRange(m)); });
+  initPeriod();
   document.getElementById("sel-delikt").addEventListener("change", e => { state.delikt = +e.target.value; renderAll(); });
   document.getElementById("sel-type").addEventListener("change", e => { state.type = +e.target.value; renderAll(); });
   document.getElementById("chip").addEventListener("click", () => { state.sel = -1; renderAll(); });
@@ -667,12 +824,9 @@ function initControls() {
   }));
 }
 function syncControls() {
-  const pr = presets();
-  document.querySelectorAll("#seg-period button").forEach(b => { const p = pr.find(x => x.id === b.dataset.id); b.setAttribute("aria-pressed", !!p && p.r[0] === state.range[0] && p.r[1] === state.range[1]); });
+  updatePeriodChip();
   document.querySelectorAll("#seg-metric button").forEach(b => b.setAttribute("aria-pressed", b.dataset.id === state.metric));
   document.querySelectorAll("#seg-lang button").forEach(b => b.setAttribute("aria-pressed", b.dataset.lang === lang));
-  document.getElementById("sel-month").value = monthOfRange();
-  document.getElementById("d-from").value = isoDay(state.range[0]); document.getElementById("d-to").value = isoDay(state.range[1]);
   document.getElementById("sel-delikt").value = state.delikt; document.getElementById("sel-type").value = state.type;
   const chip = document.getElementById("chip");
   if (state.sel >= 0) { chip.hidden = false; chip.textContent = `${areas[state.sel].name} (${bezName[areas[state.sel].bez]}) ✕`; } else chip.hidden = true;
