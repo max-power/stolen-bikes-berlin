@@ -10,6 +10,25 @@ ranking, districts, bike types, time of day and a monthly timeline. Period, offe
 be filtered; clicking a planning area drills into it. German (default) and English UI. The whole
 dashboard is one static file, `index.html`, with no external requests.
 
+## Links to a view
+
+The whole view is stored in the URL hash, so any address can be shared or bookmarked (the "Copy link"
+button copies it). Nothing is sent to a server. All parameters are optional:
+
+| Parameter | Example | Meaning |
+|---|---|---|
+| `from`, `to` | `from=2026-03-01&to=2026-05-31` | Period (ISO dates; one of them alone is open-ended) |
+| `period` | `period=last30` | Named period instead of dates: `all`, `last30`, `last90`, `month`, `prevmonth`, `2025`, `2026-03` |
+| `delikt` | `delikt=Fahrraddiebstahl` | Offense, as spelled in the CSV |
+| `art` | `art=Mountainbike` | Bike type, as spelled in the CSV |
+| `metric` | `metric=rate` | Map metric: `count`, `density` (per km²), `rate` (per 1,000 residents) |
+| `plr` | `plr=01300732` | Selected planning area (LOR ID) |
+| `lang` | `lang=en` | Language (`de` is the default) |
+
+Example: `index.html#period=2026-03&metric=rate&lang=en`. Unknown or invalid values are ignored.
+The page itself always writes fixed dates, so shared links keep showing the same period; `period=` is
+for hand-made links such as "always the last 30 days".
+
 ## Build
 
 ```bash

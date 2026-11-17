@@ -96,6 +96,9 @@ select, input[type="date"] { background:var(--surface); color:var(--ink); border
   .pop-presets { flex-direction:row; flex-wrap:wrap; border-right:0; border-bottom:1px solid var(--border); }
   .pop-presets hr { display:none; }
 }
+.cpy { all:unset; box-sizing:border-box; cursor:pointer; display:inline-flex; align-items:center; gap:6px; margin-left:auto; padding:6px 10px; font-size:13px; color:var(--ink-2); border:1px solid var(--border); border-radius:8px; background:var(--surface); white-space:nowrap; }
+.cpy:hover { background:var(--ghost); }
+.cpy:focus-visible { outline:2px solid var(--series-1); outline-offset:2px; }
 .chip { all:unset; cursor:pointer; display:inline-flex; gap:8px; align-items:center; background:var(--ink); color:var(--surface); border-radius:999px; padding:4px 12px; font-size:13px; }
 .chip[hidden] { display:none; }
 .kpis { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:12px; margin-bottom:12px; }
@@ -199,6 +202,7 @@ table.t td:last-child, table.t th:last-child { text-align:right; }
     <div class="fg"><label class="lbl-f" for="sel-delikt" data-i18n="offense">Offense</label><select id="sel-delikt"></select></div>
     <div class="fg"><label class="lbl-f" for="sel-type" data-i18n="biketype">Bike type</label><select id="sel-type"></select></div>
     <button class="chip" id="chip" hidden></button>
+    <button type="button" class="cpy" id="copy-link"><svg viewBox="0 0 16 16" width="14" height="14" aria-hidden="true"><path d="M6.5 9.5a3 3 0 0 0 4.2 0l2.3-2.3a3 3 0 0 0-4.2-4.2L8 3.8M9.5 6.5a3 3 0 0 0-4.2 0L3 8.8a3 3 0 0 0 4.2 4.2L8 12.2" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg><span id="copy-lbl" data-i18n="copyLink" aria-live="polite">Link kopieren</span></button>
   </div>
 
   <section class="card" style="margin-bottom:12px" aria-labelledby="tl-h" data-card="tl">
@@ -256,7 +260,8 @@ const I18N = {
     sub:(a,b,n,u)=>`Polizeilich erfasste Fahrraddiebstähle sowie Keller- und Bodeneinbrüche mit Fahrrädern, ${a} – ${b} (${n} Fälle nach Beginn des Tatzeitraums; Stand ${u}). Planungsraum auf der Karte anklicken für Details.`,
     period:"Zeitraum", month:"Monat", monthPh:"Monat wählen", from:"Von", to:"Bis", offense:"Delikt", biketype:"Fahrradart", all:"Alle",
     last90:"Letzte 90 Tage", last30:"Letzte 30 Tage", clearSel:"Auswahl des Planungsraums aufheben",
-    allData:"Alle Daten", curMonth:"Aktueller Monat", prevMonth:"Vorheriger Monat", pPrev:"Vorheriger Zeitraum", pNext:"Nächster Zeitraum", pDialog:"Zeitraum wählen", pPresets:"Schnellauswahl",
+    copyLink:"Link kopieren", copied:"Link kopiert ✓", copyFail:"Kopieren fehlgeschlagen",
+    allData:"Alle Daten",curMonth:"Aktueller Monat", prevMonth:"Vorheriger Monat", pPrev:"Vorheriger Zeitraum", pNext:"Nächster Zeitraum", pDialog:"Zeitraum wählen", pPresets:"Schnellauswahl",
     pHint1:"Monat anklicken – ein zweiter Klick wählt einen Bereich.", pHint2:"Jetzt den letzten Monat des Bereichs anklicken.", apply:"Anwenden", cancel:"Abbrechen",
     kCases:"Gemeldete Fälle", kPerDay:n=>`${n} pro Tag`, kValue:"Wert des Diebesguts", kValueSub:"Summe der gemeldeten Werte",
     kMedian:"Medianwert je Fall", kMedianSub:"Fälle mit Wert > 0 €", kAtt:"Versuche", kAttSub:n=>`${n} versucht, nicht vollendet`,
@@ -286,7 +291,8 @@ const I18N = {
     sub:(a,b,n,u)=>`Police-reported bicycle thefts and cellar/storage burglaries involving bikes, ${a} – ${b} (${n} cases by start of offence window; data as of ${u}). Click a planning area on the map to drill into it.`,
     period:"Period", month:"Month", monthPh:"Pick a month", from:"From", to:"To", offense:"Offense", biketype:"Bike type", all:"All",
     last90:"Last 90 days", last30:"Last 30 days", clearSel:"Clear planning area selection",
-    allData:"All data", curMonth:"Current month", prevMonth:"Previous month", pPrev:"Previous period", pNext:"Next period", pDialog:"Choose period", pPresets:"Quick select",
+    copyLink:"Copy link", copied:"Link copied ✓", copyFail:"Copy failed",
+    allData:"All data",curMonth:"Current month", prevMonth:"Previous month", pPrev:"Previous period", pNext:"Next period", pDialog:"Choose period", pPresets:"Quick select",
     pHint1:"Click a month – a second click selects a range.", pHint2:"Now click the last month of the range.", apply:"Apply", cancel:"Cancel",
     kCases:"Reported cases", kPerDay:n=>`${n} per day`, kValue:"Value of stolen goods", kValueSub:"sum of reported values",
     kMedian:"Median value per case", kMedianSub:"cases with a value > €0", kAtt:"Attempts", kAttSub:n=>`${n} attempted, not completed`,
@@ -832,8 +838,63 @@ function syncControls() {
   if (state.sel >= 0) { chip.hidden = false; chip.textContent = `${areas[state.sel].name} (${bezName[areas[state.sel].bez]}) ✕`; } else chip.hidden = true;
 }
 
+/* ---- shareable links: the whole view lives in the URL hash (#from=…&to=…&delikt=…&art=…&metric=…&plr=…&lang=…) ---- */
+function periodKeyword(k) { // named periods accepted in links: all, last30, last90, month, prevmonth, 2025, 2026-03
+  const mx = meta.maxDay, mn = meta.minDay;
+  if (k === "all") return [mn, mx];
+  if (k === "last30") return [Math.max(mn, mx - 29), mx];
+  if (k === "last90") return [Math.max(mn, mx - 89), mx];
+  if (k === "month") return monthRange(NM - 1);
+  if (k === "prevmonth") return NM > 1 ? monthRange(NM - 2) : null;
+  let m;
+  if ((m = /^(\d{4})$/.exec(k))) { const y = meta.years.find(x => x[0] === +m[1]); return y ? [y[1], y[2]] : null; }
+  if ((m = /^(\d{4})-(\d{2})$/.exec(k))) { const i = monthIdx(+m[1], +m[2] - 1); return i >= 0 && i < NM ? monthRange(i) : null; }
+  return null;
+}
+function hashToState(h) { // invalid or unknown values are ignored (fall back to the defaults)
+  const p = new URLSearchParams(h.replace(/^#/, "")), s = {range:[...FULL], delikt:-1, type:-1, metric:"count", sel:-1};
+  const iso = v => (/^\d{4}-\d{2}-\d{2}$/.test(v || "") ? dayFromIso(v) : NaN);
+  const kw = p.get("period") ? periodKeyword(p.get("period")) : null, f = iso(p.get("from")), t2 = iso(p.get("to"));
+  if (kw) s.range = kw;
+  else if (!Number.isNaN(f) || !Number.isNaN(t2)) {
+    const a = clampDay(Number.isNaN(f) ? meta.minDay : f), b = clampDay(Number.isNaN(t2) ? meta.maxDay : t2);
+    s.range = a <= b ? [a, b] : [b, a];
+  }
+  s.delikt = meta.delikte.indexOf(p.get("delikt")); s.type = meta.types.indexOf(p.get("art"));
+  if (["count", "density", "rate"].includes(p.get("metric"))) s.metric = p.get("metric");
+  s.sel = areas.findIndex(a => a.id === p.get("plr"));
+  const l = p.get("lang");
+  return {state:s, lang:l && I18N[l] ? l : null};
+}
+function stateToHash() { // defaults are left out; dates are written as fixed days so links stay valid when the data window moves
+  const p = new URLSearchParams();
+  if (!isFull()) { p.set("from", isoDay(state.range[0])); p.set("to", isoDay(state.range[1])); }
+  if (state.delikt >= 0) p.set("delikt", meta.delikte[state.delikt]);
+  if (state.type >= 0) p.set("art", meta.types[state.type]);
+  if (state.metric !== "count") p.set("metric", state.metric);
+  if (state.sel >= 0) p.set("plr", areas[state.sel].id);
+  if (lang !== "de") p.set("lang", lang);
+  return p.toString();
+}
+function loadHash() { const h = hashToState(location.hash); Object.assign(state, h.state); if (h.lang) lang = h.lang; }
+function writeHash() { // replaceState: the address always matches the view without filling the back-button history
+  const h = stateToHash();
+  try { history.replaceState(null, "", location.pathname + location.search + (h ? "#" + h : "")); } catch (e) {}
+}
+let copyTimer;
+async function copyLink() {
+  writeHash(); let ok = false;
+  try { await navigator.clipboard.writeText(location.href); ok = true; }
+  catch (e) {
+    const ta = document.createElement("textarea"); ta.value = location.href; ta.style.cssText = "position:fixed;opacity:0";
+    document.body.append(ta); ta.select(); try { ok = document.execCommand("copy"); } catch (e2) {} ta.remove();
+  }
+  $("copy-lbl").textContent = t(ok ? "copied" : "copyFail");
+  clearTimeout(copyTimer); copyTimer = setTimeout(() => { $("copy-lbl").textContent = t("copyLink"); }, 2000);
+}
+
 function renderAll() {
-  hideTip(); syncControls();
+  hideTip(); syncControls(); writeHash();
   const mMap = mask({sel:false}), mSel = mask();
   renderMap(mMap); renderTop(); renderDistricts();
   renderKpis(mSel); renderHour(mSel); renderTypes(mSel); renderTimeline();
@@ -842,7 +903,13 @@ function renderAll() {
 }
 
 /* ================= boot ================= */
+loadHash(); setLocale();
 applyStatic(); buildLabels(); initControls(); renderAll();
+$("copy-link").addEventListener("click", copyLink);
+window.addEventListener("hashchange", () => { // a pasted or edited address changes the view
+  if (location.hash.replace(/^#/, "") === stateToHash()) return;
+  loadHash(); setLocale(); applyStatic(); buildLabels(); renderAll();
+});
 let rt; new ResizeObserver(() => { clearTimeout(rt); rt = setTimeout(() => { renderTimeline(); renderHour(mask()); renderTop(); }, 80); }).observe(document.body);
 </script>
 </body>
